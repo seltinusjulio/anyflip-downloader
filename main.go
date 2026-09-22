@@ -26,6 +26,7 @@ var donwloadThreads int
 var downloadRetries int
 var downloadRetryDelay time.Duration
 var chunkSize uint
+var uiMode bool
 
 type flipbook struct {
 	URL       *url.URL
@@ -34,10 +35,13 @@ type flipbook struct {
 	pageURLs  []string
 }
 
+type progressFunc func(stage string, current int, total int, message string)
+
 type downloadOptions struct {
 	threads    int
 	retries    int
 	retryDelay time.Duration
+	onProgress progressFunc
 }
 
 func init() {
@@ -50,10 +54,15 @@ func init() {
 	flag.IntVar(&downloadRetries, "retries", 1, "Number of download retries")
 	flag.DurationVar(&downloadRetryDelay, "waitretry", time.Second, "Wait time between download retries")
 	flag.UintVar(&chunkSize, "chunksize", 10, "Amount of images converted at once. Higher amount amount will end in less write actions but more memory usage")
+	flag.BoolVar(&uiMode, "ui", false, "Start in graphical UI window mode")
 }
 
 func main() {
 	flag.Parse()
+	if uiMode || flag.NArg() == 0 {
+		startUI()
+		return
+	}
 	run()
 }
 
@@ -98,7 +107,7 @@ func run() {
 		log.Fatal(err)
 	}
 	fmt.Println("Converting to pdf")
-	err = createPDF(outputFile, tempDownloadFolder, int(chunkSize))
+	err = createPDF(outputFile, tempDownloadFolder, int(chunkSize), nil)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -118,7 +127,7 @@ func printUsage() {
 	flag.PrintDefaults()
 }
 
-func createPDF(outputFile string, imageDir string, chunkSize int) error {
+func createPDF(outputFile string, imageDir string, chunkSize int, onProgress progressFunc) error {
 	outputFile = strings.ReplaceAll(outputFile, "'", "")
 	outputFile = strings.ReplaceAll(outputFile, "\\", "")
 	outputFile = strings.ReplaceAll(outputFile, ":", "")
@@ -165,6 +174,9 @@ func createPDF(outputFile string, imageDir string, chunkSize int) error {
 		imagePathChunk := imagePaths[i:end]
 		err = api.ImportImagesFile(imagePathChunk, outputFile, impConf, nil)
 		bar.Add(min(chunkSize, len(imagePaths)-i))
+		if onProgress != nil {
+			onProgress("converting", end, len(imagePaths), "")
+		}
 	}
 
 	fmt.Println()

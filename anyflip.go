@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/asaskevich/govalidator"
@@ -97,6 +98,7 @@ func (fb *flipbook) downloadImages(downloadFolder string, options downloadOption
 	downloadErrors := make(chan error)
 
 	var wg sync.WaitGroup
+	var downloadedCount atomic.Int64
 
 	// Generate pages to download
 	go func() {
@@ -113,6 +115,10 @@ func (fb *flipbook) downloadImages(downloadFolder string, options downloadOption
 				downloadErrors <- err
 			} else {
 				bar.Add(1)
+				current := int(downloadedCount.Add(1))
+				if options.onProgress != nil {
+					options.onProgress("downloading", current, fb.pageCount, "")
+				}
 			}
 		}
 	}

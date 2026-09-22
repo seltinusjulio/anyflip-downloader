@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AnyFlip Downloader</title>
+  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+  <style>
+    /* Custom scrollbar for logs */
+    #box-console-logs::-webkit-scrollbar {
+      width: 6px;
+    }
+    #box-console-logs::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.05);
+    }
+    #box-console-logs::-webkit-scrollbar-thumb {
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 3px;
+    }
+  </style>
+</head>
+<body id="app-body" class="bg-[var(--background,#f8fafc)] text-[var(--foreground,#0f172a)] antialiased p-4 md:p-6 min-h-screen select-none">
+  <div id="main-container" class="max-w-3xl mx-auto space-y-5">
+
+    <!-- Header Section -->
+    <header id="app-header" class="flex items-center justify-between border-b border-[var(--border,#e2e8f0)] pb-4">
+      <div id="header-brand-box" class="flex items-center space-x-3">
+        <div id="header-logo-badge" class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 to-rose-500 flex items-center justify-center text-white shadow-sm font-bold text-lg">
+          A
+        </div>
+        <div id="header-text-container">
+          <h1 id="app-title-text" class="text-lg font-bold tracking-tight text-[var(--foreground,#0f172a)]">AnyFlip Downloader</h1>
+          <p id="app-subtitle-text" class="text-xs text-[var(--muted-foreground,#64748b)]">Unduh buku AnyFlip & konversi langsung ke PDF</p>
+        </div>
+      </div>
+      <div id="header-status-box" class="flex items-center space-x-2">
+        <span id="server-status-pill" class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
+          <span id="server-status-dot" class="w-2 h-2 mr-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+          Siap
+        </span>
+      </div>
+    </header>
+
+    <!-- Main Download Card -->
+    <div id="card-download-form" class="bg-[var(--card,#ffffff)] border border-[var(--border,#e2e8f0)] rounded-2xl p-5 shadow-sm space-y-4">
+      <div id="card-download-header">
+        <h2 id="card-download-title" class="text-sm font-semibold text-[var(--foreground,#0f172a)]">Unduh Buku Baru</h2>
+        <p id="card-download-desc" class="text-xs text-[var(--muted-foreground,#64748b)]">Masukkan link buku AnyFlip untuk memulai proses penyimpanan.</p>
+      </div>
+
+      <div id="form-inputs-group" class="space-y-3.5">
+        <!-- URL Input -->
+        <div id="input-group-url" class="space-y-1">
+          <label id="label-book-url" for="input-book-url" class="text-xs font-medium text-[var(--foreground,#0f172a)] flex justify-between">
+            <span>URL Buku AnyFlip <span id="star-required-url" class="text-rose-500">*</span></span>
+            <span id="hint-url-example" class="text-[var(--muted-foreground,#64748b)] text-[11px]">Contoh: https://online.anyflip.com/vpslm/ckfb/</span>
+          </label>
+          <input 
+            id="input-book-url" 
+            type="url" 
+            placeholder="https://online.anyflip.com/..." 
+            class="w-full px-3.5 py-2.5 rounded-xl border border-[var(--border,#cbd5e1)] bg-[var(--background,#ffffff)] text-[var(--foreground,#0f172a)] text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500 transition"
+          />
+        </div>
+
+        <!-- Optional Title Input -->
+        <div id="input-group-title" class="space-y-1">
+          <label id="label-book-title" for="input-book-title" class="text-xs font-medium text-[var(--foreground,#0f172a)]">
+            Judul Dokumen PDF <span id="hint-title-optional" class="text-[var(--muted-foreground,#64748b)] font-normal text-[11px]">(Opsional, otomatis menggunakan judul AnyFlip jika dikosongkan)</span>
+          </label>
+          <input 
+            id="input-book-title" 
+            type="text" 
+            placeholder="Otomatis dari judul buku" 
+            class="w-full px-3.5 py-2 rounded-xl border border-[var(--border,#cbd5e1)] bg-[var(--background,#ffffff)] text-[var(--foreground,#0f172a)] text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500 transition"
+          />
+        </div>
+
+        <!-- Advanced Options Toggle -->
+        <div id="section-advanced-options" class="pt-0.5">
+          <button 
+            id="btn-toggle-advanced" 
+            type="button" 
+            onclick="toggleAdvancedOptions()"
+            class="text-xs font-medium text-[var(--muted-foreground,#64748b)] hover:text-[var(--foreground,#0f172a)] flex items-center space-x-1.5 transition"
+          >
+            <span id="icon-toggle-advanced">⚙️</span>
+            <span id="label-toggle-advanced">Opsi Lanjutan (Threads, Chunk Size, Simpan Gambar)</span>
+            <span id="indicator-toggle-advanced" class="text-[10px]">▼</span>
+          </button>
+
+          <div id="container-advanced-fields" class="hidden mt-2.5 p-3.5 rounded-xl border border-[var(--border,#e2e8f0)] bg-[var(--background,#f8fafc)] grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            <!-- Threads -->
+            <div id="group-advanced-threads" class="space-y-1">
+              <label id="label-advanced-threads" for="input-advanced-threads" class="text-xs font-medium text-[var(--foreground,#0f172a)]">
+                Jumlah Unduhan Paralel (Threads): <span id="val-display-threads" class="text-amber-500 font-bold">4</span>
+              </label>
+              <input 
+                id="input-advanced-threads" 
+                type="range" 
+                min="1" 
+                max="16" 
+                value="4" 
+                oninput="document.getElementById('val-display-threads').innerText = this.value"
+                class="w-full accent-amber-500 cursor-pointer"
+              />
+              <p id="desc-advanced-threads" class="text-[10px] text-[var(--muted-foreground,#64748b)]">Lebih banyak thread mempercepat proses unduhan.</p>
+            </div>
+
+            <!-- Chunk Size -->
+            <div id="group-advanced-chunksize" class="space-y-1">
+              <label id="label-advanced-chunksize" for="input-advanced-chunksize" class="text-xs font-medium text-[var(--foreground,#0f172a)]">
+                Ukuran Batch Konversi (Chunk)
+              </label>
+              <input 
+                id="input-advanced-chunksize" 
+                type="number" 
+                min="1" 
+                max="50" 
+                value="10" 
+                class="w-full px-3 py-1.5 rounded-lg border border-[var(--border,#cbd5e1)] bg-[var(--background,#ffffff)] text-xs text-[var(--foreground,#0f172a)]"
+              />
+              <p id="desc-advanced-chunksize" class="text-[10px] text-[var(--muted-foreground,#64748b)]">Mengatur pemakaian memori RAM saat membuat PDF.</p>
+            </div>
+
+            <!-- Keep Download Folder -->
+            <div id="group-advanced-keepfolder" class="flex items-start space-x-2 sm:col-span-2 pt-1 border-t border-[var(--border,#e2e8f0)]">
+              <input 
+                id="checkbox-keep-folder" 
+                type="checkbox" 
+                class="mt-0.5 rounded border-[var(--border,#cbd5e1)] text-amber-500 focus:ring-amber-500 accent-amber-500"
+              />
+              <label id="label-keep-folder" for="checkbox-keep-folder" class="text-xs text-[var(--foreground,#0f172a)] cursor-pointer">
+                <span id="text-keep-folder-title" class="font-medium">Pertahankan folder gambar asli</span>
+                <span id="text-keep-folder-desc" class="block text-[11px] text-[var(--muted-foreground,#64748b)]">Simpan semua file gambar individual (.webp / .jpg) di folder lokal tanpa dihapus.</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Button -->
+        <div id="wrapper-action-buttons" class="pt-1 flex gap-2">
+          <button 
+            id="btn-start-download" 
+            type="button" 
+            onclick="startDownload()"
+            class="flex-1 py-2.5 px-4 rounded-xl bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-white font-medium text-sm shadow-sm transition flex items-center justify-center space-x-2"
+          >
+            <span id="icon-start-download">📥</span>
+            <span id="text-start-download">Mulai Unduh & Konversi ke PDF</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Active Progress Card (Hidden initially, shown when downloading) -->
+    <div id="card-download-progress" class="hidden bg-[var(--card,#ffffff)] border border-[var(--border,#e2e8f0)] rounded-2xl p-5 shadow-sm space-y-3.5">
+      <div id="progress-header-box" class="flex items-center justify-between">
+        <div id="progress-title-box">
+          <div id="badge-process-stage" class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-amber-500/10 text-amber-600 mb-1">
+            Mempersiapkan
+          </div>
+          <h3 id="label-active-book-title" class="text-sm font-bold text-[var(--foreground,#0f172a)]">Memeriksa URL...</h3>
+        </div>
+        <div id="progress-counter-box" class="text-right">
+          <span id="text-progress-percent" class="text-xl font-extrabold text-[var(--foreground,#0f172a)]">0%</span>
+          <span id="text-progress-fraction" class="block text-[11px] text-[var(--muted-foreground,#64748b)]">0 / 0 Halaman</span>
+        </div>
+      </div>
+
+      <!-- Progress Bar Track -->
+      <div id="track-progress-bar" class="w-full bg-[var(--background,#f1f5f9)] rounded-full h-3 overflow-hidden border border-[var(--border,#e2e8f0)] p-0.5">
+        <div 
+          id="bar-progress-fill" 
+          class="bg-gradient-to-r from-amber-500 to-rose-500 h-full rounded-full transition-all duration-150" 
+          style="width: 0%"
+        ></div>
+      </div>
+
+      <!-- Status Logs Window -->
+      <div id="box-console-logs" class="bg-[var(--background,#0f172a)] text-slate-200 border border-slate-800 rounded-xl p-3 font-mono text-[11px] max-h-36 overflow-y-auto space-y-1">
+        <div id="log-line-init" class="text-emerald-400">> Sistem siap.</div>
+      </div>
+
+      <!-- Completion Banner (Hidden until finished) -->
+      <div id="banner-download-success" class="hidden p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div id="banner-success-text" class="flex items-center space-x-2.5">
+          <span id="icon-success" class="text-xl">🎉</span>
+          <div>
+            <div id="title-success" class="text-xs font-bold text-emerald-600">Buku Berhasil Disimpan!</div>
+            <div id="desc-success" class="text-[11px] text-[var(--muted-foreground,#64748b)]">File PDF siap dibaca di komputer Anda.</div>
+          </div>
+        </div>
+        <div id="banner-success-actions" class="flex items-center space-x-2">
+          <button id="btn-open-pdf" onclick="openCurrentPDF()" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-medium rounded-lg shadow-sm transition">
+            Buka PDF
+          </button>
+          <button id="btn-open-folder" onclick="openCurrentFolder()" class="px-3 py-1.5 border border-[var(--border,#cbd5e1)] bg-[var(--card,#ffffff)] hover:bg-[var(--background,#f8fafc)] text-xs text-[var(--foreground,#0f172a)] rounded-lg transition">
+            Buka Folder
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Download History / Library Card -->
+    <div id="card-downloaded-library" class="bg-[var(--card,#ffffff)] border border-[var(--border,#e2e8f0)] rounded-2xl p-5 shadow-sm space-y-3.5">
+      <div id="library-header-box" class="flex items-center justify-between border-b border-[var(--border,#e2e8f0)] pb-3">
+        <div>
+          <h3 id="library-title-text" class="text-sm font-semibold text-[var(--foreground,#0f172a)]">Buku Tersimpan di Folder Ini</h3>
+          <p id="library-subtitle-text" class="text-[11px] text-[var(--muted-foreground,#64748b)]">File PDF yang ada di folder kerja aplikasi</p>
+        </div>
+        <button id="btn-refresh-library" onclick="loadBooksList()" class="text-xs px-2.5 py-1 rounded-lg border border-[var(--border,#cbd5e1)] hover:bg-[var(--background,#f8fafc)] text-[var(--muted-foreground,#64748b)] transition flex items-center space-x-1">
+          <span>🔄</span>
+          <span>Muat Ulang</span>
+        </button>
+      </div>
+
+      <div id="list-downloaded-books" class="space-y-2">
+        <div id="loading-books-placeholder" class="text-xs text-[var(--muted-foreground,#64748b)] py-2 text-center">Memuat daftar buku...</div>
+      </div>
+    </div>
+
+  </div>
+
+  <script id="script-ui-logic">
+    let lastGeneratedPdf = "";
+    let eventSource = null;
+
+    function toggleAdvancedOptions() {
+      const container = document.getElementById('container-advanced-fields');
+      const indicator = document.getElementById('indicator-toggle-advanced');
+      if (container.classList.contains('hidden')) {
+        container.classList.remove('hidden');
+        indicator.innerText = '▲';
+      } else {
+        container.classList.add('hidden');
+        indicator.innerText = '▼';
+      }
+    }
+
+    function addLog(msg, colorClass = 'text-slate-300') {
+      const logs = document.getElementById('box-console-logs');
+      const div = document.createElement('div');
+      div.className = colorClass;
+      div.innerText = `> ${msg}`;
+      logs.appendChild(div);
+      logs.scrollTop = logs.scrollHeight;
+    }
+
+    function connectSSE() {
+      if (eventSource) {
+        eventSource.close();
+      }
+      eventSource = new EventSource('/api/progress');
+
+      eventSource.onmessage = function(event) {
+        try {
+          const data = JSON.parse(event.data);
+          handleProgressEvent(data);
+        } catch (e) {
+          console.error("Failed to parse SSE event", e);
+        }
+      };
+
+      eventSource.onerror = function() {
+        // SSE disconnected or closed by server when idle
+      };
+    }
+
+    function handleProgressEvent(data) {
+      const fill = document.getElementById('bar-progress-fill');
+      const percentText = document.getElementById('text-progress-percent');
+      const fractionText = document.getElementById('text-progress-fraction');
+      const stageBadge = document.getElementById('badge-process-stage');
+      const titleLabel = document.getElementById('label-active-book-title');
+
+      if (data.title) {
+        titleLabel.innerText = data.title;
+        lastGeneratedPdf = data.title + ".pdf";
+      }
+
+      if (data.message) {
+        addLog(data.message, data.error ? 'text-rose-400 font-bold' : 'text-slate-300');
+      }
+
+      if (data.stage === "downloading") {
+        stageBadge.innerText = 'Mengunduh Gambar';
+        stageBadge.className = 'inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-amber-500/10 text-amber-600 mb-1';
+      } else if (data.stage === "converting") {
+        stageBadge.innerText = 'Mengonversi ke PDF';
+        stageBadge.className = 'inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-rose-500/10 text-rose-600 mb-1';
+      } else if (data.stage === "completed") {
+        stageBadge.innerText = 'Selesai';
+        stageBadge.className = 'inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-500/10 text-emerald-600 mb-1';
+        document.getElementById('banner-download-success').classList.remove('hidden');
+        document.getElementById('btn-start-download').disabled = false;
+        document.getElementById('btn-start-download').classList.remove('opacity-50');
+        loadBooksList();
+      } else if (data.stage === "error") {
+        stageBadge.innerText = 'Gagal';
+        stageBadge.className = 'inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-rose-500/10 text-rose-600 mb-1';
+        document.getElementById('btn-start-download').disabled = false;
+        document.getElementById('btn-start-download').classList.remove('opacity-50');
+      }
+
+      if (data.total > 0) {
+        const pct = Math.min(100, Math.floor((data.current / data.total) * 100));
+        fill.style.width = `${pct}%`;
+        percentText.innerText = `${pct}%`;
+        if (data.stage === "downloading") {
+          fractionText.innerText = `${data.current} / ${data.total} Halaman`;
+        } else if (data.stage === "converting") {
+          fractionText.innerText = `Menyusun PDF: ${data.current} / ${data.total}`;
+        }
+      }
+    }
+
+    async function startDownload() {
+      const url = document.getElementById('input-book-url').value.trim();
+      const title = document.getElementById('input-book-title').value.trim();
+      const threads = parseInt(document.getElementById('input-advanced-threads').value) || 4;
+      const chunkSize = parseInt(document.getElementById('input-advanced-chunksize').value) || 10;
+      const keepFolder = document.getElementById('checkbox-keep-folder').checked;
+
+      if (!url) {
+        alert("Mohon masukkan URL buku AnyFlip!");
+        return;
+      }
+
+      // Reset state
+      document.getElementById('card-download-progress').classList.remove('hidden');
+      document.getElementById('banner-download-success').classList.add('hidden');
+      document.getElementById('btn-start-download').disabled = true;
+      document.getElementById('btn-start-download').classList.add('opacity-50');
+      document.getElementById('bar-progress-fill').style.width = '0%';
+      document.getElementById('text-progress-percent').innerText = '0%';
+      document.getElementById('text-progress-fraction').innerText = '0 / 0 Halaman';
+      document.getElementById('box-console-logs').innerHTML = '';
+
+      connectSSE();
+      addLog(`Menghubungkan ke AnyFlip untuk URL: ${url}`, 'text-amber-400');
+
+      try {
+        const res = await fetch('/api/download', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            url: url,
+            title: title,
+            threads: threads,
+            chunkSize: chunkSize,
+            keepFolder: keepFolder
+          })
+        });
+        const respData = await res.json();
+        if (!res.ok) {
+          addLog(`Gagal memulai: ${respData.error}`, 'text-rose-400 font-bold');
+          document.getElementById('btn-start-download').disabled = false;
+          document.getElementById('btn-start-download').classList.remove('opacity-50');
+        }
+      } catch (err) {
+        addLog(`Koneksi error: ${err.message}`, 'text-rose-400 font-bold');
+        document.getElementById('btn-start-download').disabled = false;
+        document.getElementById('btn-start-download').classList.remove('opacity-50');
+      }
+    }
+
+    async function loadBooksList() {
+      const listEl = document.getElementById('list-downloaded-books');
+      try {
+        const res = await fetch('/api/books');
+        const books = await res.json();
+        if (!books || books.length === 0) {
+          listEl.innerHTML = '<div class="text-xs text-slate-400 py-2 text-center">Belum ada file PDF yang tersimpan.</div>';
+          return;
+        }
+
+        listEl.innerHTML = '';
+        books.forEach((book, idx) => {
+          const item = document.createElement('div');
+          item.id = `item-book-${idx}`;
+          item.className = "flex items-center justify-between p-3 rounded-xl border border-[var(--border,#e2e8f0)] bg-[var(--background,#f8fafc)] hover:bg-[var(--card,#ffffff)] transition";
+          item.innerHTML = `
+            <div id="info-book-${idx}" class="flex items-center space-x-3 overflow-hidden pr-2">
+              <div id="icon-book-${idx}" class="w-8 h-8 flex-shrink-0 rounded-lg bg-rose-500/10 text-rose-500 flex items-center justify-center font-bold text-xs">
+                PDF
+              </div>
+              <div class="truncate">
+                <div id="name-book-${idx}" class="text-xs font-semibold text-[var(--foreground,#0f172a)] truncate">${book.name}</div>
+                <div id="meta-book-${idx}" class="text-[11px] text-[var(--muted-foreground,#64748b)]">${book.sizeFormatted} • ${book.modified}</div>
+              </div>
+            </div>
+            <div id="actions-book-${idx}" class="flex items-center space-x-1.5 flex-shrink-0">
+              <button id="btn-open-file-${idx}" onclick="openFile('${encodeURIComponent(book.name)}')" class="px-2.5 py-1 text-xs font-medium rounded-lg bg-amber-500/10 text-amber-600 hover:bg-amber-500/20 transition">
+                Buka
+              </button>
+            </div>
+          `;
+          listEl.appendChild(item);
+        });
+      } catch (e) {
+        listEl.innerHTML = '<div class="text-xs text-rose-400 py-2 text-center">Gagal memuat daftar buku.</div>';
+      }
+    }
+
+    async function openFile(filename) {
+      try {
+        await fetch('/api/open-file', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ filename: decodeURIComponent(filename) })
+        });
+      } catch (e) {
+        console.error("Gagal membuka file", e);
+      }
+    }
+
+    function openCurrentPDF() {
+      if (lastGeneratedPdf) {
+        openFile(encodeURIComponent(lastGeneratedPdf));
+      }
+    }
+
+    async function openCurrentFolder() {
+      try {
+        await fetch('/api/open-folder', { method: 'POST' });
+      } catch (e) {
+        console.error("Gagal membuka folder", e);
+      }
+    }
+
+    // Load initial list on page load
+    window.addEventListener('DOMContentLoaded', () => {
+      loadBooksList();
+    });
+  </script>
+</body>
+</html>
